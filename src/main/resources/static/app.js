@@ -1,0 +1,10 @@
+const api='/api/tasks', list=document.querySelector('#taskList'), form=document.querySelector('#taskForm'), filter=document.querySelector('#filter');let tasks=[];
+form.addEventListener('submit',async e=>{e.preventDefault();await fetch(api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:title.value.trim(),description:description.value.trim(),priority:priority.value,status:'TODO',deadline:deadline.value||null})});form.reset();priority.value='MEDIUM';load()});
+filter.addEventListener('change',render);
+async function load(){const r=await fetch(api);tasks=await r.json();render()}
+function render(){const visible=filter.value==='ALL'?tasks:tasks.filter(t=>t.status===filter.value);if(!visible.length){list.innerHTML='<p class="empty">Inga uppgifter här ännu.</p>';return}list.innerHTML=visible.map(t=>`<article class="task"><div><h3>${esc(t.title)}</h3><p>${esc(t.description||'Ingen beskrivning')}</p><div class="badges"><span class="badge">${label(t.status)}</span><span class="badge">${label(t.priority)}</span>${t.deadline?`<span class="badge">${t.deadline}</span>`:''}</div></div><div class="actions">${t.status!=='IN_PROGRESS'?`<button onclick="status(${t.id},'IN_PROGRESS')">Påbörja</button>`:''}${t.status!=='DONE'?`<button onclick="status(${t.id},'DONE')">Klar</button>`:''}<button class="delete" onclick="removeTask(${t.id})">Ta bort</button></div></article>`).join('')}
+async function status(id,s){await fetch(`${api}/${id}/status?status=${s}`,{method:'PATCH'});load()}
+async function removeTask(id){await fetch(`${api}/${id}`,{method:'DELETE'});load()}
+function label(v){return({TODO:'ATT GÖRA',IN_PROGRESS:'PÅGÅR',DONE:'KLART',LOW:'LÅG',MEDIUM:'MEDEL',HIGH:'HÖG'})[v]||v}
+function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+load();
