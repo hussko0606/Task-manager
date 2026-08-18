@@ -1,1 +1,105 @@
-<!doctype html><html lang="sv"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Task Manager</title><link rel="stylesheet" href="/style.css"></head><body><main><header><p class="eyebrow">TASK MANAGER</p><h1>Få saker gjorda.</h1><p>En enkel task manager byggd med Java och Spring Boot.</p></header><section class="card"><h2>Ny uppgift</h2><form id="taskForm"><input id="title" placeholder="Vad behöver göras?" required><textarea id="description" placeholder="Beskrivning"></textarea><select id="priority"><option value="LOW">Låg prioritet</option><option value="MEDIUM" selected>Medel prioritet</option><option value="HIGH">Hög prioritet</option></select><input id="deadline" type="date"><button>Skapa uppgift</button></form></section><section class="tasks"><div class="heading"><h2>Mina uppgifter</h2><select id="filter"><option value="ALL">Alla</option><option value="TODO">Att göra</option><option value="IN_PROGRESS">Pågår</option><option value="DONE">Klart</option></select></div><div id="taskList"></div></section></main><script src="/app.js"></script></body></html>
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TaskFlow</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div>
+        <div class="brand-mark">TF</div>
+        <div class="brand-copy">
+          <strong>TaskFlow</strong>
+          <span>Personal workspace</span>
+        </div>
+      </div>
+      <div class="sidebar-note">
+        <span>JAVA + SPRING BOOT</span>
+        <p>Planera, prioritera och flytta uppgifter genom ditt arbetsflöde.</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">MIN ARBETSÖVERSIKT</p>
+          <h1>Vad jobbar vi på?</h1>
+        </div>
+        <button id="toggleForm" class="new-task-button" type="button">+ Ny uppgift</button>
+      </header>
+
+      <section id="composer" class="composer is-open">
+        <div class="composer-heading">
+          <div>
+            <p class="eyebrow">SNABBREGISTRERING</p>
+            <h2>Skapa en uppgift</h2>
+          </div>
+          <span class="shortcut">TASK</span>
+        </div>
+        <form id="taskForm">
+          <label class="field field-wide">
+            <span>Titel</span>
+            <input id="title" placeholder="Ex. Förbered presentation" required>
+          </label>
+          <label class="field field-wide">
+            <span>Beskrivning</span>
+            <textarea id="description" placeholder="Lägg till en kort beskrivning..."></textarea>
+          </label>
+          <label class="field">
+            <span>Prioritet</span>
+            <select id="priority">
+              <option value="LOW">Låg</option>
+              <option value="MEDIUM" selected>Medel</option>
+              <option value="HIGH">Hög</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Deadline</span>
+            <input id="deadline" type="date">
+          </label>
+          <div class="form-actions field-wide">
+            <p id="formMessage" aria-live="polite"></p>
+            <button type="submit">Lägg till på tavlan</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="stats" aria-label="Statistik">
+        <article><span id="totalCount">0</span><p>Totalt</p></article>
+        <article><span id="progressCount">0</span><p>Pågår</p></article>
+        <article><span id="doneCount">0</span><p>Klara</p></article>
+      </section>
+
+      <section class="board" aria-label="Kanban-tavla">
+        <div class="column column-todo">
+          <div class="column-head">
+            <div><span class="status-dot"></span><h2>Att göra</h2></div>
+            <span id="todoCount" class="count">0</span>
+          </div>
+          <div id="todoList" class="task-list"></div>
+        </div>
+
+        <div class="column column-progress">
+          <div class="column-head">
+            <div><span class="status-dot"></span><h2>Pågår</h2></div>
+            <span id="inProgressCount" class="count">0</span>
+          </div>
+          <div id="progressList" class="task-list"></div>
+        </div>
+
+        <div class="column column-done">
+          <div class="column-head">
+            <div><span class="status-dot"></span><h2>Klart</h2></div>
+            <span id="completedCount" class="count">0</span>
+          </div>
+          <div id="doneList" class="task-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/app.js"></script>
+</body>
+</html>
