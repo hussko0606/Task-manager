@@ -1,15 +1,24 @@
 const api = '/api/tasks';
-const list = document.querySelector('#taskList');
 const form = document.querySelector('#taskForm');
-const filter = document.querySelector('#filter');
 const titleInput = document.querySelector('#title');
 const descriptionInput = document.querySelector('#description');
 const priorityInput = document.querySelector('#priority');
 const deadlineInput = document.querySelector('#deadline');
+const formMessage = document.querySelector('#formMessage');
+const composer = document.querySelector('#composer');
+const toggleFormButton = document.querySelector('#toggleForm');
+const todoList = document.querySelector('#todoList');
+const progressList = document.querySelector('#progressList');
+const doneList = document.querySelector('#doneList');
 let tasks = [];
+
+toggleFormButton.addEventListener('click', () => {
+    composer.classList.toggle('is-open');
+});
 
 form.addEventListener('submit', async event => {
     event.preventDefault();
+    formMessage.textContent = 'Sparar...';
 
     const response = await fetch(api, {
         method: 'POST',
@@ -24,48 +33,64 @@ form.addEventListener('submit', async event => {
     });
 
     if (!response.ok) {
-        alert('Uppgiften kunde inte skapas. Kontrollera uppgifterna och försök igen.');
+        formMessage.textContent = 'Kunde inte skapa uppgiften.';
         return;
     }
 
     form.reset();
     priorityInput.value = 'MEDIUM';
+    formMessage.textContent = 'Uppgiften lades till.';
     await load();
 });
-
-filter.addEventListener('change', render);
 
 async function load() {
     const response = await fetch(api);
     if (!response.ok) {
-        list.innerHTML = '<p class="empty">Kunde inte hämta uppgifter.</p>';
+        const error = '<p class="empty">Kunde inte hämta uppgifter.</p>';
+        todoList.innerHTML = error;
+        progressList.innerHTML = error;
+        doneList.innerHTML = error;
         return;
     }
+
     tasks = await response.json();
     render();
 }
 
 function render() {
-    const visible = filter.value === 'ALL' ? tasks : tasks.filter(task => task.status === filter.value);
-    if (!visible.length) {
-        list.innerHTML = '<p class="empty">Inga uppgifter här ännu.</p>';
-        return;
+    const todo = tasks.filter(task => task.status === 'TODO');
+    const progress = tasks.filter(task => task.status === 'IN_PROGRESS');
+    const done = tasks.filter(task => task.status === 'DONE');
+
+    todoList.innerHTML = renderColumn(todo, 'TODO');
+    progressList.innerHTML = renderColumn(progress, 'IN_PROGRESS');
+    doneList.innerHTML = renderColumn(done, 'DONE');
+
+    document.querySelector('#todoCount').textContent = todo.length;
+    document.querySelector('#inProgressCount').textContent = progress.length;
+    document.querySelector('#completedCount').textContent = done.length;
+    document.querySelector('#totalCount').textContent = tasks.length;
+    document.querySelector('#progressCount').textContent = progress.length;
+    document.querySelector('#doneCount').textContent = done.length;
+}
+
+function renderColumn(items, status) {
+    if (!items.length) {
+        return `<p class="empty">${emptyText(status)}</p>`;
     }
 
-    list.innerHTML = visible.map(task => `
-        <article class="task">
-            <div>
-                <h3>${esc(task.title)}</h3>
-                <p>${esc(task.description || 'Ingen beskrivning')}</p>
-                <div class="badges">
-                    <span class="badge">${label(task.status)}</span>
-                    <span class="badge">${label(task.priority)}</span>
-                    ${task.deadline ? `<span class="badge">${task.deadline}</span>` : ''}
-                </div>
+    return items.map(task => `
+        <article class="task-card">
+            <h3>${esc(task.title)}</h3>
+            <p class="description">${esc(task.description || 'Ingen beskrivning')}</p>
+            <div class="meta">
+                <span class="pill priority-${task.priority}">${priorityLabel(task.priority)}</span>
+                ${task.deadline ? `<span class="pill deadline">${formatDate(task.deadline)}</span>` : ''}
             </div>
-            <div class="actions">
-                ${task.status !== 'IN_PROGRESS' ? `<button onclick="changeStatus(${task.id},'IN_PROGRESS')">Påbörja</button>` : ''}
-                ${task.status !== 'DONE' ? `<button onclick="changeStatus(${task.id},'DONE')">Klar</button>` : ''}
+            <div class="task-actions">
+                ${task.status === 'TODO' ? `<button class="primary" onclick="changeStatus(${task.id}, 'IN_PROGRESS')">Påbörja</button>` : ''}
+                ${task.status === 'IN_PROGRESS' ? `<button onclick="changeStatus(${task.id}, 'TODO')">Tillbaka</button><button class="done-action" onclick="changeStatus(${task.id}, 'DONE')">Markera klar</button>` : ''}
+                ${task.status === 'DONE' ? `<button onclick="changeStatus(${task.id}, 'IN_PROGRESS')">Öppna igen</button>` : ''}
                 <button class="delete" onclick="removeTask(${task.id})">Ta bort</button>
             </div>
         </article>
@@ -82,8 +107,16 @@ async function removeTask(id) {
     if (response.ok) await load();
 }
 
-function label(value) {
-    return ({ TODO: 'ATT GÖRA', IN_PROGRESS: 'PÅGÅR', DONE: 'KLART', LOW: 'LÅG', MEDIUM: 'MEDEL', HIGH: 'HÖG' })[value] || value;
+function priorityLabel(value) {
+    return ({ LOW: 'LÅG PRIORITET', MEDIUM: 'MEDEL', HIGH: 'HÖG PRIORITET' })[value] || value;
+}
+
+function emptyText(status) {
+    return ({ TODO: 'Inget väntar på dig.', IN_PROGRESS: 'Inget pågår just nu.', DONE: 'Inget färdigt ännu.' })[status];
+}
+
+function formatDate(value) {
+    return new Intl.DateTimeFormat('sv-SE', { day: 'numeric', month: 'short' }).format(new Date(`${value}T12:00:00`));
 }
 
 function esc(value) {
